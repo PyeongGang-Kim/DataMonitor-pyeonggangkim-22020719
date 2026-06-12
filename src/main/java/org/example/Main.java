@@ -1,17 +1,37 @@
 package org.example;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
-    public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+import org.example.cli.CommandParser;
+import org.example.repository.InMemoryRepository;
+import org.example.service.MonitorService;
+import org.example.service.SeedData;
 
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
+import java.io.PrintStream;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        System.setOut(new PrintStream(System.out, true, "UTF-8"));
+
+        InMemoryRepository repository = new InMemoryRepository();
+        MonitorService service = new MonitorService(repository);
+        new SeedData().seed(service);
+
+        CommandParser parser = new CommandParser(service);
+        Scanner scanner = new Scanner(System.in, "UTF-8");
+
+        System.out.println("DataMonitor started. 명령어를 입력하세요. (help / exit)");
+        while (true) {
+            System.out.print("> ");
+            System.out.flush();
+            if (!scanner.hasNextLine()) break;
+            String line = scanner.nextLine().trim();
+            if (line.isEmpty()) continue;
+            if (line.equalsIgnoreCase("exit")) {
+                System.out.println("종료합니다.");
+                break;
+            }
+            parser.execute(line);
         }
+        scanner.close();
     }
 }
